@@ -132,6 +132,9 @@ Scanner::Scanner(std::istream& in) : is(in) {
   keywords["if"] = Token::Kind::If;
   keywords["reset"] = Token::Kind::Reset;
   keywords["snapshot"] = Token::Kind::Snapshot;
+  keywords["move"] = Token::Kind::Move;
+  keywords["activate"] = Token::Kind::Activate;
+  keywords["deactivate"] = Token::Kind::Deactivate;
   nextCh();
 }
 

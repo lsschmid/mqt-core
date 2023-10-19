@@ -54,7 +54,10 @@ struct Token {
     McxRecursive,
     McxVchain,
     Mcphase,
-    Comment
+    Comment,
+    Move,
+    Activate,
+    Deactivate,
   };
 
   Kind kind = Kind::None;
@@ -113,6 +116,9 @@ static inline const std::map<Token::Kind, std::string> KIND_NAMES{
     {Token::Kind::If, "if"},
     {Token::Kind::Eq, "=="},
     {Token::Kind::Reset, "reset"},
-    {Token::Kind::Comment, "//"}};
+    {Token::Kind::Comment, "//"},
+    {Token::Kind::Move, "move"},
+    {Token::Kind::Activate, "activate"},
+    {Token::Kind::Deactivate, "deactivate"}};
 
 } // namespace qasm

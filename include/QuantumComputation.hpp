@@ -606,6 +606,18 @@ public:
     checkQubitRange(targets);
     emplace_back<StandardOperation>(getNqubits(), targets, qc::Barrier);
   }
+  void move(const std::vector<Qubit> targets) {
+    checkQubitRange(targets);
+    emplace_back<StandardOperation>(getNqubits(), targets, qc::Move);
+  }
+  void activate(const std::vector<Qubit> targets) {
+    checkQubitRange(targets);
+    emplace_back<StandardOperation>(getNqubits(), targets, qc::Activate);
+  }
+  void deactivate(const std::vector<Qubit> targets) {
+    checkQubitRange(targets);
+    emplace_back<StandardOperation>(getNqubits(), targets, qc::Deactivate);
+  }
 
   void classicControlled(const OpType op, const Qubit target,
                          const ClassicalRegister& controlRegister,

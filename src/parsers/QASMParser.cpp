@@ -72,6 +72,27 @@ void qc::QuantumComputation::importOpenQASM(std::istream& is) {
         }
       }
       barrier(qubits);
+    } else if (p.sym == Token::Kind::Move || p.sym == Token::Kind::Activate ||
+               p.sym == Token::Kind::Deactivate) {
+      // barrier statement
+      p.scan();
+      std::vector<qc::QuantumRegister> args;
+      p.argList(args);
+      p.check(Token::Kind::Semicolon);
+
+      std::vector<qc::Qubit> qubits{};
+      for (auto& arg : args) {
+        for (std::size_t q = 0; q < arg.second; ++q) {
+          qubits.emplace_back(static_cast<Qubit>(arg.first + q));
+        }
+      }
+      if (p.sym == Token::Kind::Move) {
+        move(qubits);
+      } else if (p.sym == Token::Kind::Activate) {
+        activate(qubits);
+      } else {
+        deactivate(qubits);
+      }
     } else if (p.sym == Token::Kind::Opaque) {
       // opaque gate definition
       p.opaqueGateDecl();
