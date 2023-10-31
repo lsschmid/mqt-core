@@ -78,39 +78,13 @@ void qc::QuantumComputation::importOpenQASM(std::istream& is) {
       p.argList(args);
       p.check(Token::Kind::Semicolon);
 
-      std::vector<qc::Qubit> qubits{};
-      for (auto& arg : args) {
-        for (std::size_t q = 0; q < arg.second; ++q) {
-          qubits.emplace_back(static_cast<Qubit>(arg.first + q));
-        }
-      }
-      move(qubits);
-    } else if (p.sym == Token::Kind::Activate) {
-      p.scan();
-      std::vector<qc::QuantumRegister> args;
-      p.argList(args);
-      p.check(Token::Kind::Semicolon);
-
-      std::vector<qc::Qubit> qubits{};
-      for (auto& arg : args) {
-        for (std::size_t q = 0; q < arg.second; ++q) {
-          qubits.emplace_back(static_cast<Qubit>(arg.first + q));
-        }
-      }
-      activate(qubits);
-    } else if (p.sym == Token::Kind::Deactivate) {
-      p.scan();
-      std::vector<qc::QuantumRegister> args;
-      p.argList(args);
-      p.check(Token::Kind::Semicolon);
-
-      std::vector<qc::Qubit> qubits{};
-      for (auto& arg : args) {
-        for (std::size_t q = 0; q < arg.second; ++q) {
-          qubits.emplace_back(static_cast<Qubit>(arg.first + q));
-        }
-      }
-      deactivate(qubits);
+      const auto coord1 = static_cast<Qubit>(args[0].first);
+      const auto coord2 = static_cast<Qubit>(args[1].first);
+      move(coord1, coord2);
+    } else if (p.sym == Token::Kind::AodActivate ||
+               p.sym == Token::Kind::AodDeactivate ||
+               p.sym == Token::Kind::AodMove) {
+      ops.emplace_back(p.aodOp());
     } else if (p.sym == Token::Kind::Opaque) {
       // opaque gate definition
       p.opaqueGateDecl();

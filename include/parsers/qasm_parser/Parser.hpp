@@ -5,6 +5,7 @@
 #include "operations/CompoundOperation.hpp"
 #include "operations/NonUnitaryOperation.hpp"
 #include "operations/StandardOperation.hpp"
+#include "operations/AodOperation.hpp"
 
 #include <cmath>
 #include <iostream>
@@ -192,6 +193,8 @@ public:
   void gateDecl();
 
   std::unique_ptr<qc::Operation> qop();
+
+  std::unique_ptr<qc::Operation> aodOp();
 
   static bool gateInfo(const std::string& name, GateInfo& info);
 

@@ -492,6 +492,7 @@ public:
   DEFINE_TWO_TARGET_OPERATION(iswap)
   DEFINE_TWO_TARGET_OPERATION(peres)
   DEFINE_TWO_TARGET_OPERATION(peresdg)
+  DEFINE_TWO_TARGET_OPERATION(move)
 
 #define DEFINE_TWO_TARGET_SINGLE_PARAMETER_OPERATION(op, param)                \
   void op(const SymbolOrNumber&(param), const Qubit target0,                   \
@@ -605,18 +606,6 @@ public:
   void barrier(const Targets& targets) {
     checkQubitRange(targets);
     emplace_back<StandardOperation>(getNqubits(), targets, qc::Barrier);
-  }
-  void move(const std::vector<Qubit> targets) {
-    checkQubitRange(targets);
-    emplace_back<StandardOperation>(getNqubits(), targets, qc::Move);
-  }
-  void activate(const std::vector<Qubit> targets) {
-    checkQubitRange(targets);
-    emplace_back<StandardOperation>(getNqubits(), targets, qc::Activate);
-  }
-  void deactivate(const std::vector<Qubit> targets) {
-    checkQubitRange(targets);
-    emplace_back<StandardOperation>(getNqubits(), targets, qc::Deactivate);
   }
 
   void classicControlled(const OpType op, const Qubit target,

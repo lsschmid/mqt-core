@@ -808,6 +808,44 @@ std::unique_ptr<qc::Operation> Parser::qop() {
   error("No valid Qop: " + t.str);
 }
 
+std::unique_ptr<qc::Operation> Parser::aodOp() {
+  const auto& type = KIND_NAMES.at(sym);
+  std::vector<uint32_t> dirs{};
+  std::vector<uint32_t> indices{};
+  std::vector<qc::fp> parameters{};
+
+  // check operations encoded in parameters
+  scan();
+  check(Token::Kind::Lpar);
+  while (sym != Token::Kind::Rpar) {
+    scan();
+    dirs.emplace_back(static_cast<uint32_t>(t.val));
+    check(Token::Kind::Comma);
+    scan();
+    indices.emplace_back(static_cast<uint32_t>(t.val));
+    check(Token::Kind::Comma);
+    scan();
+    parameters.emplace_back(static_cast<qc::fp>(t.valReal));
+    if (sym == Token::Kind::Semicolon) {
+      scan();
+    }
+  }
+  check(Token::Kind::Rpar);
+
+  // get the qubits
+  std::vector<qc::Qubit> qubits{};
+  while (sym != Token::Kind::Semicolon) {
+    qubits.emplace_back(argumentQreg().first);
+    if (sym == Token::Kind::Comma) {
+      scan();
+    }
+  }
+  check(Token::Kind::Semicolon);
+  qc::AodOperation op(type, qubits, dirs, indices, parameters);
+  return std::make_unique<qc::AodOperation>(type, qubits, dirs, indices,
+                                            parameters);
+}
+
 void Parser::parseParameters(const GateInfo& info,
                              std::vector<qc::fp>& parameters) {
   // if the gate has parameters, then parse them first

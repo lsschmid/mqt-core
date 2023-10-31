@@ -56,8 +56,9 @@ struct Token {
     Mcphase,
     Comment,
     Move,
-    Activate,
-    Deactivate,
+    AodActivate,
+    AodDeactivate,
+    AodMove,
   };
 
   Kind kind = Kind::None;
@@ -118,7 +119,9 @@ static inline const std::map<Token::Kind, std::string> KIND_NAMES{
     {Token::Kind::Reset, "reset"},
     {Token::Kind::Comment, "//"},
     {Token::Kind::Move, "move"},
-    {Token::Kind::Activate, "activate"},
-    {Token::Kind::Deactivate, "deactivate"}};
+    {Token::Kind::AodActivate, "aod_activate"},
+    {Token::Kind::AodDeactivate, "aod_deactivate"},
+    {Token::Kind::AodMove, "aod_move"},
+};
 
 } // namespace qasm

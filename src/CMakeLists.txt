@@ -39,6 +39,7 @@ if(NOT TARGET ${PROJECT_NAME})
     ${PROJECT_SOURCE_DIR}/include/operations/Operation.hpp
     ${PROJECT_SOURCE_DIR}/include/operations/StandardOperation.hpp
     ${PROJECT_SOURCE_DIR}/include/operations/SymbolicOperation.hpp
+          ${PROJECT_SOURCE_DIR}/include/operations/AodOperation.hpp
     ${PROJECT_SOURCE_DIR}/include/parsers/qasm_parser/Parser.hpp
     ${PROJECT_SOURCE_DIR}/include/parsers/qasm_parser/Scanner.hpp
     ${PROJECT_SOURCE_DIR}/include/parsers/qasm_parser/Token.hpp
@@ -58,6 +59,7 @@ if(NOT TARGET ${PROJECT_NAME})
     operations/Operation.cpp
     operations/StandardOperation.cpp
     operations/SymbolicOperation.cpp
+    operations/AodOperation.cpp
     parsers/GRCSParser.cpp
     parsers/QASMParser.cpp
     parsers/QCParser.cpp
