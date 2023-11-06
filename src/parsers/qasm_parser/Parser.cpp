@@ -811,8 +811,8 @@ std::unique_ptr<qc::Operation> Parser::qop() {
 std::unique_ptr<qc::Operation> Parser::aodOp() {
   const auto& type = KIND_NAMES.at(sym);
   std::vector<uint32_t> dirs{};
-  std::vector<uint32_t> indices{};
-  std::vector<qc::fp> parameters{};
+  std::vector<qc::fp> starts{};
+  std::vector<qc::fp> ends{};
 
   // check operations encoded in parameters
   scan();
@@ -822,10 +822,10 @@ std::unique_ptr<qc::Operation> Parser::aodOp() {
     dirs.emplace_back(static_cast<uint32_t>(t.val));
     check(Token::Kind::Comma);
     scan();
-    indices.emplace_back(static_cast<uint32_t>(t.val));
+    starts.emplace_back(static_cast<qc::fp>(t.val));
     check(Token::Kind::Comma);
     scan();
-    parameters.emplace_back(static_cast<qc::fp>(t.valReal));
+    ends.emplace_back(static_cast<qc::fp>(t.valReal));
     if (sym == Token::Kind::Semicolon) {
       scan();
     }
@@ -841,9 +841,7 @@ std::unique_ptr<qc::Operation> Parser::aodOp() {
     }
   }
   check(Token::Kind::Semicolon);
-  qc::AodOperation op(type, qubits, dirs, indices, parameters);
-  return std::make_unique<qc::AodOperation>(type, qubits, dirs, indices,
-                                            parameters);
+  return std::make_unique<qc::AodOperation>(type, qubits, dirs, starts, ends);
 }
 
 void Parser::parseParameters(const GateInfo& info,

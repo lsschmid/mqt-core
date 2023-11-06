@@ -12,9 +12,9 @@ namespace qc {
 
 AodOperation::AodOperation(OpType s, std::vector<Qubit> qubits,
                            std::vector<uint32_t> dirs,
-                           std::vector<uint32_t> indices,
-                           std::vector<fp> params) {
-  assert(dirs.size() == indices.size() && indices.size() == params.size());
+                           std::vector<fp> start,
+                           std::vector<fp> end) {
+  assert(dirs.size() == start.size() && start.size() == end.size());
   type = s;
   targets = std::move(qubits);
   name = toString(type);
@@ -23,19 +23,38 @@ AodOperation::AodOperation(OpType s, std::vector<Qubit> qubits,
 
   for (size_t i = 0; i < dirs.size(); ++i) {
     if (dirs[i] == 0) {
-      xOperations.push_back({indices[i], params[i]});
+      xOperations.push_back({start[i], end[i]});
     } else {
-      yOperations.push_back({indices[i], params[i]});
+      yOperations.push_back({start[i], end[i]});
     }
   }
 }
 
 AodOperation::AodOperation(std::string type, std::vector<Qubit> targets,
                            std::vector<uint32_t> dirs,
-                           std::vector<uint32_t> indices,
-                           std::vector<fp> params)
+                           std::vector<fp> start,
+                           std::vector<fp> end)
     : AodOperation(OP_NAME_TO_TYPE.at(type), std::move(targets),
-                   std::move(dirs), std::move(indices), std::move(params)) {}
+                   std::move(dirs), std::move(start), std::move(end)) {}
+
+
+AodOperation::AodOperation(
+    OpType s, std::vector<Qubit> targets,
+    std::vector<std::tuple<uint32_t, fp, fp>> operations) {
+  type = s;
+  this->targets = std::move(targets);
+  name = toString(type);
+  nqubits = this->targets.size();
+  startQubit = this->targets[0];
+
+  for (const auto& [dir, index, param] : operations) {
+    if (dir == 0) {
+      xOperations.push_back({index, param});
+    } else {
+      yOperations.push_back({index, param});
+    }
+  }
+}
 
 void AodOperation::dumpOpenQASM(
     std::ostream& of, const RegisterNames& qreg,
@@ -45,15 +64,15 @@ void AodOperation::dumpOpenQASM(
   // write AOD oferations
   of << " (";
   for (const auto& xOp : xOperations) {
-    of << "0, " << xOp.aodIndex << ", " << xOp.parameter << "; ";
+    of << "0, " << xOp.start << ", " << xOp.end << "; ";
   }
   for (const auto& yOp : yOperations) {
-    of << "1, " << yOp.aodIndex << ", " << yOp.parameter << ";";
+    of << "1, " << yOp.start << ", " << yOp.end << ";";
   }
   // remove last semicolon
   of.seekp(-1, std::ios_base::end);
   of << ")";
-  // write qubit indices
+  // write qubit start
   for (const auto& qubit : targets) {
     of << " " << qreg[qubit].second << ",";
   }
@@ -64,10 +83,10 @@ void AodOperation::dumpOpenQASM(
 void AodOperation::invert() {
   if (type == OpType::AodMove) {
     for (auto& xOp : xOperations) {
-      xOp.parameter = -xOp.parameter;
+      xOp.end = -xOp.end;
     }
     for (auto& yOp : yOperations) {
-      yOp.parameter = -yOp.parameter;
+      yOp.end = -yOp.end;
     }
   }
   if (type == OpType::AodActivate) {

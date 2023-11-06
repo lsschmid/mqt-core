@@ -9,8 +9,8 @@
 namespace qc {
 class AodOperation : public Operation {
   struct SingleOperation {
-    uint32_t aodIndex;
-    fp parameter;
+    fp start;
+    fp end;
   };
   std::vector<SingleOperation> xOperations;
   std::vector<SingleOperation> yOperations;
@@ -18,11 +18,13 @@ class AodOperation : public Operation {
 public:
   AodOperation() = default;
   AodOperation(OpType type, std::vector<Qubit> targets,
-               std::vector<uint32_t> dirs, std::vector<uint32_t> indices,
-               std::vector<fp> params);
+               std::vector<uint32_t> dirs, std::vector<fp> starts,
+               std::vector<fp> ends);
   AodOperation(std::string type, std::vector<Qubit> targets,
-               std::vector<uint32_t> dirs, std::vector<uint32_t> indices,
-               std::vector<fp> params);
+               std::vector<uint32_t> dirs, std::vector<fp> starts,
+               std::vector<fp> ends);
+  AodOperation(OpType type, std::vector<Qubit> targets,
+               std::vector<std::tuple<uint32_t, fp, fp>> operations);
 
   [[nodiscard]] std::unique_ptr<Operation> clone() const override {
     return std::make_unique<AodOperation>(*this);
@@ -35,19 +37,42 @@ public:
     return it;
   }
 
-  [[nodiscard]] fp inline getMaxParameterX(){
-   return std::abs(std::max_element(xOperations.begin(), xOperations.end(),
-                            [](const SingleOperation& a, const SingleOperation& b) {
-                              return std::abs(a.parameter) < std::abs(b.parameter);
-                            })->parameter);
+  [[nodiscard]] fp inline getMaxParameterX() const {
+    return std::abs(std::max_element(
+                        xOperations.begin(), xOperations.end(),
+                        [](const SingleOperation& a, const SingleOperation& b) {
+                          return std::abs(a.end) < std::abs(b.end);
+                        })
+                        ->end);
   }
 
-  [[nodiscard]] fp inline getMaxParameterY(){
-    return std::abs(std::max_element(yOperations.begin(), yOperations.end(),
-                                     [](const SingleOperation& a, const SingleOperation& b) {
-                                       return std::abs(a.parameter) < std::abs(b.parameter);
-                                     })->parameter);
+  [[nodiscard]] fp inline getMaxParameterY() const {
+    return std::abs(std::max_element(
+                        yOperations.begin(), yOperations.end(),
+                        [](const SingleOperation& a, const SingleOperation& b) {
+                          return std::abs(a.end) < std::abs(b.end);
+                        })
+                        ->end);
   }
+
+  [[nodiscard]] std::vector<fp> inline getParamterXs() const {
+    std::vector<fp> params;
+    params.reserve(xOperations.size());
+    for (const auto& op : xOperations) {
+      params.push_back(op.end);
+    }
+    return params;
+  }
+
+  [[nodiscard]] std::vector<fp> inline getParamterYs() const {
+    std::vector<fp> params;
+    params.reserve(yOperations.size());
+    for (const auto& op : yOperations) {
+      params.push_back(op.end);
+    }
+    return params;
+  }
+
 
   void dumpOpenQASM(std::ostream& of, const RegisterNames& qreg,
                     const RegisterNames& creg) const override;

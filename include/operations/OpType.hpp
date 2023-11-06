@@ -153,7 +153,7 @@ inline std::string toString(const OpType& opType) {
   case AodDeactivate:
     return "aod_deactivate";
   case AodMove:
-    return "ao_move";
+    return "aod_move";
   // GCOV_EXCL_START
   default:
     throw std::invalid_argument("Invalid OpType!");
