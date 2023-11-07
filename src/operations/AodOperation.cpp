@@ -9,10 +9,19 @@
 #include <utility>
 
 namespace qc {
+AodOperation::AodOperation(OpType s, std::vector<Qubit> qubits,
+                           std::vector<uint32_t> dirs, std::vector<fp> start,
+                           std::vector<fp> end) {
+  auto dirsEnum = std::vector<Dimension>(dirs.size());
+  for (size_t i = 0; i < dirs.size(); ++i) {
+    dirsEnum[i] = static_cast<Dimension>(dirs[i]);
+  }
+  AodOperation(s, std::move(qubits), std::move(dirsEnum), std::move(start),
+               std::move(end));
+}
 
 AodOperation::AodOperation(OpType s, std::vector<Qubit> qubits,
-                           std::vector<uint32_t> dirs,
-                           std::vector<fp> start,
+                           std::vector<Dimension> dirs, std::vector<fp> start,
                            std::vector<fp> end) {
   assert(dirs.size() == start.size() && start.size() == end.size());
   type = s;
@@ -22,25 +31,19 @@ AodOperation::AodOperation(OpType s, std::vector<Qubit> qubits,
   startQubit = targets[0];
 
   for (size_t i = 0; i < dirs.size(); ++i) {
-    if (dirs[i] == 0) {
-      xOperations.push_back({start[i], end[i]});
-    } else {
-      yOperations.push_back({start[i], end[i]});
-    }
+    operations.emplace_back(dirs[i], start[i], end[i]);
   }
 }
 
 AodOperation::AodOperation(std::string type, std::vector<Qubit> targets,
-                           std::vector<uint32_t> dirs,
-                           std::vector<fp> start,
+                           std::vector<uint32_t> dirs, std::vector<fp> start,
                            std::vector<fp> end)
     : AodOperation(OP_NAME_TO_TYPE.at(type), std::move(targets),
                    std::move(dirs), std::move(start), std::move(end)) {}
 
-
 AodOperation::AodOperation(
     OpType s, std::vector<Qubit> targets,
-    std::vector<std::tuple<uint32_t, fp, fp>> operations) {
+    std::vector<std::tuple<Dimension, fp, fp>>& operations) {
   type = s;
   this->targets = std::move(targets);
   name = toString(type);
@@ -48,12 +51,18 @@ AodOperation::AodOperation(
   startQubit = this->targets[0];
 
   for (const auto& [dir, index, param] : operations) {
-    if (dir == 0) {
-      xOperations.push_back({index, param});
-    } else {
-      yOperations.push_back({index, param});
-    }
+    operations.emplace_back(dir, index, param);
   }
+}
+
+AodOperation::AodOperation(OpType s, std::vector<Qubit> t,
+                           std::vector<SingleOperation>& ops)
+    : operations(std::move(ops)) {
+  type = s;
+  this->targets = t;
+  name = toString(type);
+  nqubits = this->targets.size();
+  startQubit = this->targets[0];
 }
 
 void AodOperation::dumpOpenQASM(
@@ -63,11 +72,8 @@ void AodOperation::dumpOpenQASM(
   of << name;
   // write AOD oferations
   of << " (";
-  for (const auto& xOp : xOperations) {
-    of << "0, " << xOp.start << ", " << xOp.end << "; ";
-  }
-  for (const auto& yOp : yOperations) {
-    of << "1, " << yOp.start << ", " << yOp.end << ";";
+  for (const auto& op : operations) {
+    of << op.toQASMString();
   }
   // remove last semicolon
   of.seekp(-1, std::ios_base::end);
@@ -82,11 +88,9 @@ void AodOperation::dumpOpenQASM(
 
 void AodOperation::invert() {
   if (type == OpType::AodMove) {
-    for (auto& xOp : xOperations) {
-      xOp.end = -xOp.end;
-    }
-    for (auto& yOp : yOperations) {
-      yOp.end = -yOp.end;
+    for (auto& op : operations) {
+      op.start = op.end;
+      op.end = -op.start;
     }
   }
   if (type == OpType::AodActivate) {

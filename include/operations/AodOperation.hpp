@@ -7,16 +7,30 @@
 #include "operations/Operation.hpp"
 
 namespace qc {
+
+enum class Dimension { X = 0, Y = 1 };
+struct SingleOperation {
+  Dimension dir;
+  fp start;
+  fp end;
+
+  SingleOperation(Dimension dir, fp start, fp end)
+      : dir(dir), start(start), end(end) {}
+
+  std::string toQASMString() const {
+    std::stringstream ss;
+    ss << static_cast<char32_t>(dir) << ", " << start << ", " << end << "; ";
+    return ss.str();
+  }
+};
 class AodOperation : public Operation {
-  struct SingleOperation {
-    fp start;
-    fp end;
-  };
-  std::vector<SingleOperation> xOperations;
-  std::vector<SingleOperation> yOperations;
+  std::vector<SingleOperation> operations;
 
 public:
   AodOperation() = default;
+  AodOperation(OpType type, std::vector<Qubit> targets,
+               std::vector<Dimension> dirs, std::vector<fp> starts,
+               std::vector<fp> ends);
   AodOperation(OpType type, std::vector<Qubit> targets,
                std::vector<uint32_t> dirs, std::vector<fp> starts,
                std::vector<fp> ends);
@@ -24,7 +38,9 @@ public:
                std::vector<uint32_t> dirs, std::vector<fp> starts,
                std::vector<fp> ends);
   AodOperation(OpType type, std::vector<Qubit> targets,
-               std::vector<std::tuple<uint32_t, fp, fp>> operations);
+               std::vector<std::tuple<Dimension, fp, fp>>& operations);
+  AodOperation(OpType type, std::vector<Qubit> targets,
+               std::vector<SingleOperation>& operations);
 
   [[nodiscard]] std::unique_ptr<Operation> clone() const override {
     return std::make_unique<AodOperation>(*this);
@@ -37,42 +53,25 @@ public:
     return it;
   }
 
-  [[nodiscard]] fp inline getMaxParameterX() const {
-    return std::abs(std::max_element(
-                        xOperations.begin(), xOperations.end(),
-                        [](const SingleOperation& a, const SingleOperation& b) {
-                          return std::abs(a.end) < std::abs(b.end);
-                        })
-                        ->end);
+  [[nodiscard]] std::vector<fp> inline getEnds(Dimension dir) const {
+    std::vector<fp> ends;
+    for (const auto& op : operations) {
+      if (op.dir == dir) {
+        ends.push_back(op.end);
+      }
+    }
+    return ends;
   }
 
-  [[nodiscard]] fp inline getMaxParameterY() const {
-    return std::abs(std::max_element(
-                        yOperations.begin(), yOperations.end(),
-                        [](const SingleOperation& a, const SingleOperation& b) {
-                          return std::abs(a.end) < std::abs(b.end);
-                        })
-                        ->end);
-  }
-
-  [[nodiscard]] std::vector<fp> inline getParamterXs() const {
+  [[nodiscard]] std::vector<fp> inline getDistances(Dimension dir) const {
     std::vector<fp> params;
-    params.reserve(xOperations.size());
-    for (const auto& op : xOperations) {
-      params.push_back(op.end);
+    for (const auto& op : operations) {
+      if (op.dir == dir) {
+        params.push_back(std::abs(op.end - op.start));
+      }
     }
     return params;
   }
-
-  [[nodiscard]] std::vector<fp> inline getParamterYs() const {
-    std::vector<fp> params;
-    params.reserve(yOperations.size());
-    for (const auto& op : yOperations) {
-      params.push_back(op.end);
-    }
-    return params;
-  }
-
 
   void dumpOpenQASM(std::ostream& of, const RegisterNames& qreg,
                     const RegisterNames& creg) const override;
