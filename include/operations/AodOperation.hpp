@@ -63,6 +63,14 @@ public:
     return ends;
   }
 
+  [[nodiscard]] fp inline getMaxDistance(Dimension dir) const {
+    const auto distances = getDistances(dir);
+    if (distances.empty()) {
+      return 0;
+    }
+    return *std::max_element(distances.begin(), distances.end());
+  }
+
   [[nodiscard]] std::vector<fp> inline getDistances(Dimension dir) const {
     std::vector<fp> params;
     for (const auto& op : operations) {
